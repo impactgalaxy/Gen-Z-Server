@@ -7,14 +7,15 @@ const app = express();
 const port = process.env.PORT || 5000;
 const corsObj = {
     origin: ["http://localhost:5173"],
-    methods: ['GET','POST','PUT','DELETE'],
+    methods: ['GET','POST','PUT','DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true // allow credentials (cookies)
 }
 app.use(cors(corsObj))
 
 app.use(express.json());
-const uri = `mongodb+srv://${import.meta.DB_USER}:${import.meta.DB_PASS}@cluster0.s7sbkwf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.s7sbkwf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -32,12 +33,14 @@ async function run() {
     // Send a ping to confirm a successful connection;
 
     const messMembers = client.db("Gen-Z").collection("MessMembers");
+    const messMembersBalance = client.db("Gen-Z").collection("MessMembersBalance")
 
     app.post('/members', async (req, res) => {
         try {
           const memberInfo = req.body; // Assuming data comes from the request body
           memberInfo.totalBalance = 0;
-          memberInfo.totalCost = 0;      
+          memberInfo.totalCost = 0;
+          memberInfo.totalMeals = [];      
           if (!memberInfo) {
             return res.status(400).send("No document provided.");
           }
@@ -57,10 +60,24 @@ async function run() {
 
     app.get("/member/:id", async(req,res)=>{
       const {id} = req.params;
-      console.log(id);
       const filter = {_id: new ObjectId(id)}
       const result = await messMembers.findOne(filter);
       res.send(result)
+    })
+
+    app.patch("/mealUpdate/:id", async (req, res)=>{
+      const {id} = req.params;
+      const doc = req.body;
+      const result = await messMembers.updateOne(
+        { _id: new ObjectId(id) },
+        { $push: {totalMeals: doc} }
+      );
+      res.send(result);
+    })
+    
+    app.post("/balance", async (req, res)=> {
+      const balance = req.body;
+      res.send("success");
     })
     
     // await client.db("admin").command({ ping: 1 });
