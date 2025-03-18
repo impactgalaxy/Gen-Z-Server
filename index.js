@@ -74,10 +74,25 @@ async function run() {
       );
       res.send(result);
     })
-    
+
     app.post("/balance", async (req, res)=> {
       const balance = req.body;
-      res.send("success");
+      let id = balance?.memberId;
+      const amount = parseInt(balance?.balance);
+      const result = await messMembersBalance.insertOne(balance);
+
+      const up = await messMembers.updateOne(
+        { _id: new ObjectId (id) },
+        { $inc: { totalBalance: amount } }, // Increment value
+      );
+  
+      res.send(result)
+    });
+
+    app.get("/balanceQuery/:id", async(req, res)=>{
+      const {id} = req.params;
+      const result = await messMembersBalance.find({memberId: id}).toArray();
+      res.send(result);
     })
     
     // await client.db("admin").command({ ping: 1 });
