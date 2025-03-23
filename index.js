@@ -33,7 +33,8 @@ async function run() {
     // Send a ping to confirm a successful connection;
 
     const messMembers = client.db("Gen-Z").collection("MessMembers");
-    const messMembersBalance = client.db("Gen-Z").collection("MessMembersBalance")
+    const messMembersBalance = client.db("Gen-Z").collection("MessMembersBalance");
+    const messCosts = client.db("Gen-Z").collection("MessCosts");
 
     app.post('/members', async (req, res) => {
         try {
@@ -93,7 +94,18 @@ async function run() {
       const {id} = req.params;
       const result = await messMembersBalance.find({memberId: id}).toArray();
       res.send(result);
+    });
+
+    app.post("/messCosts", async (req, res)=>{
+      const doc = req.body;
+      const result = await messCosts.insertOne(doc);
+      res.send(result);
     })
+
+    app.get("/mess-costs", async(req, res)=>{
+      const result = await messCosts.find().toArray();
+      res.send(result);
+    });
     
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
